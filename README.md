@@ -1,10 +1,43 @@
+<div align="center">
+
 # avercel
 
-[![npm version](https://img.shields.io/npm/v/avercel)](https://www.npmjs.com/package/avercel)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/exisz/avercel/actions/workflows/ci.yml/badge.svg)](https://github.com/exisz/avercel/actions/workflows/ci.yml)
+**Agent-Vercel** — The Vercel CLI that fights back.
 
-> Agent-Vercel: an opinionated Vercel CLI wrapper that fixes the things that drive you crazy.
+[![npm version](https://img.shields.io/npm/v/avercel)](https://www.npmjs.com/package/avercel)
+[![npm downloads](https://img.shields.io/npm/dm/avercel)](https://www.npmjs.com/package/avercel)
+[![CI](https://github.com/exisz/avercel/actions/workflows/ci.yml/badge.svg)](https://github.com/exisz/avercel/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![GitHub stars](https://img.shields.io/github/stars/exisz/avercel)](https://github.com/exisz/avercel/stargazers)
+
+Stop losing hours to trailing newlines. Stop agents from running `vercel deploy`.
+
+[Homepage](https://exisz.github.io/avercel/) · [npm](https://www.npmjs.com/package/avercel) · [Issues](https://github.com/exisz/avercel/issues)
+
+</div>
+
+---
+
+<details>
+<summary><strong>Table of Contents</strong></summary>
+
+- [The Problem](#the-problem)
+- [Quick Start](#quick-start)
+- [Features](#features)
+- [Usage](#usage)
+- [Takeover Mode](#takeover-mode)
+- [Configuration](#configuration)
+- [How It Works](#how-it-works)
+- [Why Not Just...](#why-not-just)
+- [AgentSkill](#agentskill)
+- [Star History](#star-history)
+- [Contributing](#contributing)
+- [License](#license)
+- [Support](#support)
+
+</details>
+
+---
 
 ## The Problem
 
@@ -20,46 +53,26 @@ echo "sk-abc123" | vercel env add SECRET_KEY production
 
 Or maybe you've accidentally run `vercel deploy` and bypassed your entire CI/CD pipeline. Or your team keeps using `preview` when the project convention is `dev`.
 
-**avercel** wraps the official Vercel CLI and fixes all of this.
+**avercel** wraps the official Vercel CLI and fixes all of this — silently, automatically, no behavior change needed.
+
+## Quick Start
+
+```bash
+npm i -g avercel
+```
+
+That's it. Both `avercel` and `vercel` now go through avercel's guardrails. The real Vercel CLI is bundled inside — no separate install needed.
 
 ## Features
 
-- 🧹 **Patched `env add`** — Automatically strips trailing whitespace/newlines from piped stdin
-- 🔍 **`env check`** — Audits all your env vars for trailing whitespace (the silent killer)
-- 🚫 **Disabled commands** — Block dangerous commands with custom error messages
-- 🛑 **Blocked environments** — Prevent wrong environment names with guidance messages
-- 🔀 **Full passthrough** — Everything else forwards to `vercel` exactly as-is (same stdin/stdout/stderr/exit code)
-
-## Installation
-
-```bash
-npm install -g avercel
-```
-
-Requires Node.js ≥ 18. The `vercel` CLI is bundled as a dependency — no separate install needed.
-
-## Takeover Mode
-
-Want `avercel` to completely replace `vercel`?
-
-```bash
-# Install avercel globally — it registers both `avercel` AND `vercel` commands
-npm i -g avercel
-
-# That's it! All `vercel` commands now go through avercel's guardrails.
-# The real vercel CLI is bundled inside avercel as a dependency.
-
-# If you had vercel installed separately, clean it up:
-avercel takeover --force
-```
-
-After takeover:
-
-```bash
-vercel ls          # → goes through avercel → forwarded to real vercel internally
-vercel deploy      # → blocked by your config → "❌ Use git push instead"
-echo "val" | vercel env add  # → trailing newline stripped automatically
-```
+| Feature | What it does |
+|---|---|
+| 🧹 **Patched `env add`** | Strips trailing whitespace/newlines from piped stdin — automatically |
+| 🔍 **`env check`** | Audits all your env vars for trailing whitespace (the silent killer) |
+| 🚫 **Disabled commands** | Block dangerous commands like `deploy` with custom error messages |
+| 🛑 **Blocked environments** | Prevent wrong env names (`preview` vs `dev`) with guidance |
+| 🔀 **Full passthrough** | Everything else forwards to `vercel` exactly as-is — same stdin/stdout/stderr/exit code |
+| 🤖 **AgentSkill built-in** | AI coding agents get avercel's guardrails automatically |
 
 ## Usage
 
@@ -78,10 +91,10 @@ echo "sk-abc123" | avercel env add SECRET_KEY production
 # Audit existing env vars
 avercel env check
 # → ⚠️  Found 2 env var(s) with trailing whitespace/newlines:
-#    Variable                      Targets                  Problem
-#    ────────────────────────────────────────────────────────────────
-#    DATABASE_URL                  production, preview      trailing newline (\n)
-#    SECRET_KEY                    production               trailing whitespace
+#    Variable        Targets              Problem
+#    ──────────────────────────────────────────────────
+#    DATABASE_URL    production, preview   trailing newline (\n)
+#    SECRET_KEY      production            trailing whitespace
 
 # Blocked environment names show a helpful error
 avercel env pull preview
@@ -90,6 +103,28 @@ avercel env pull preview
 # Blocked commands show your custom message
 avercel deploy
 # → ❌ Do not use `vercel deploy`. Push to GitHub and let the integration handle it.
+```
+
+## Takeover Mode
+
+Want `avercel` to completely replace `vercel`?
+
+```bash
+# Install avercel globally — it registers both `avercel` AND `vercel` commands
+npm i -g avercel
+
+# That's it! All `vercel` commands now go through avercel's guardrails.
+
+# If you had vercel installed separately, clean it up:
+avercel takeover --force
+```
+
+After takeover:
+
+```bash
+vercel ls          # → goes through avercel → forwarded to real vercel internally
+vercel deploy      # → blocked by your config → "❌ Use git push instead"
+echo "val" | vercel env add  # → trailing newline stripped automatically
 ```
 
 ## Configuration
@@ -101,11 +136,12 @@ Create `.avercel/avercel.yaml` in your project root (or `~/.avercel/avercel.yaml
 disabled:
   deploy: "❌ Do not use `vercel deploy`. Push to GitHub — Vercel deploys on git push."
   build: "❌ Do not use `vercel build`. Vercel builds automatically on deploy."
+  "env rm": "❌ Don't remove env vars directly."
 
-# Block specific environment names in env commands
-# When someone runs `avercel env pull preview`, they get a loud error with guidance
+# Block specific environment names
 blocked_envs:
   preview: "❌ This project uses 'dev' not 'preview'. Use: avercel env pull dev"
+  staging: "❌ No staging environment. Use 'production' or 'dev'."
 ```
 
 View active config:
@@ -118,22 +154,9 @@ avercel config
 
 Block entire commands. When a user runs a disabled command, they see your custom error message and the command exits without forwarding to vercel.
 
-```yaml
-disabled:
-  deploy: "❌ Push to GitHub instead."
-  build: "❌ Vercel builds automatically."
-  "env rm": "❌ Don't remove env vars directly."
-```
-
 ### `blocked_envs`
 
 Block specific environment names in `env pull`, `env add`, `env ls`, and `env rm` commands. This is **not** silent replacement — it's a loud error with guidance.
-
-```yaml
-blocked_envs:
-  preview: "❌ Use 'dev' not 'preview'. Run: avercel env pull dev"
-  staging: "❌ No staging environment. Use 'production' or 'dev'."
-```
 
 ## `env check`
 
@@ -156,21 +179,21 @@ Token sources (in order):
 
 ```
 ┌─────────────────┐
-│     avercel     │
-│                 │
-│  1. Load config │
-│  2. Check if    │
-│     disabled    │
-│  3. Check       │
-│     blocked_envs│
-│  4. Patch or    │
-│     passthrough │
-└────────┬────────┘
+│     avercel      │
+│                  │
+│  1. Load config  │
+│  2. Check if     │
+│     disabled     │
+│  3. Check        │
+│     blocked_envs │
+│  4. Patch or     │
+│     passthrough  │
+└────────┬─────────┘
          │
          ▼
 ┌─────────────────┐
-│   vercel CLI    │
-│  (bundled dep)  │
+│   vercel CLI     │
+│  (bundled dep)   │
 └─────────────────┘
 ```
 
@@ -189,10 +212,43 @@ Token sources (in order):
 | Alias `deploy` in your shell | Doesn't help your teammates |
 | Use a `.env` file | Doesn't solve the Vercel-side issue |
 
+## AgentSkill
+
+avercel ships with a built-in [AgentSkill](skill/SKILL.md) for AI coding agents.
+
+Any agent that supports the [AgentSkill format](https://github.com/anthropics/anthropic-cookbook/blob/main/misc/prompt_caching_and_tool_use.ipynb) (Claude Code, Cursor, OpenClaw, etc.) can pick up avercel's guardrails automatically — blocked commands, env patching, and environment restrictions are enforced without the agent needing any special configuration.
+
+```
+# The skill file lives at:
+skill/SKILL.md
+```
+
+## Star History
+
+<div align="center">
+  <a href="https://star-history.com/#exisz/avercel&Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=exisz/avercel&type=Date&theme=dark" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=exisz/avercel&type=Date" />
+      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=exisz/avercel&type=Date" width="600" />
+    </picture>
+  </a>
+</div>
+
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+<a href="https://github.com/exisz/avercel/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=exisz/avercel" />
+</a>
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Support
+
+If avercel saved you from a trailing newline nightmare, consider giving it a ⭐ on GitHub — it helps others discover the project.
+
+[⭐ Star on GitHub](https://github.com/exisz/avercel)
