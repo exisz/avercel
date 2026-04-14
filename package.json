@@ -1,0 +1,57 @@
+{
+  "name": "lazyvercel",
+  "version": "0.1.0",
+  "description": "Opinionated Vercel CLI wrapper — patches env quirks, adds env auditing, environment aliases, and command guardrails",
+  "main": "dist/index.js",
+  "bin": {
+    "lazyvercel": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test dist/**/*.test.js",
+    "pretest": "npm run build",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "vercel",
+    "cli",
+    "env",
+    "wrapper",
+    "devtools"
+  ],
+  "author": "gotexis",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gotexis/lazyvercel.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gotexis/lazyvercel/issues"
+  },
+  "homepage": "https://github.com/gotexis/lazyvercel#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "peerDependencies": {
+    "vercel": "*"
+  },
+  "peerDependenciesMeta": {
+    "vercel": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}
