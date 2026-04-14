@@ -15,10 +15,10 @@ describe('config loading', () => {
     const config = loadConfig();
 
     assert.ok(typeof config === 'object');
-    assert.ok('environments' in config);
     assert.ok('disabled' in config);
-    assert.ok(typeof config.environments === 'object');
+    assert.ok('blocked_envs' in config);
     assert.ok(typeof config.disabled === 'object');
+    assert.ok(typeof config.blocked_envs === 'object');
   });
 
   it('should return config paths info', async () => {
@@ -42,11 +42,10 @@ describe('config loading', () => {
     mkdirSync(configDir, { recursive: true });
 
     const configContent = `
-environments:
-  dev: preview
-  staging: preview
 disabled:
   deploy: "Do not deploy directly"
+blocked_envs:
+  preview: "Use dev instead"
 `;
     writeFileSync(join(configDir, 'lazyvercel.yaml'), configContent);
 
@@ -54,12 +53,11 @@ disabled:
     // but we verify the YAML parsing by checking yaml.load works
     const yaml = require('js-yaml');
     const parsed = yaml.load(configContent);
-    assert.deepStrictEqual(parsed.environments, {
-      dev: 'preview',
-      staging: 'preview',
-    });
     assert.deepStrictEqual(parsed.disabled, {
       deploy: 'Do not deploy directly',
+    });
+    assert.deepStrictEqual(parsed.blocked_envs, {
+      preview: 'Use dev instead',
     });
 
     // Cleanup

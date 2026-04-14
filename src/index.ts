@@ -2,7 +2,7 @@
 
 import { loadConfig } from './config.js';
 import { isDisabled } from './utils/disabled.js';
-import { resolveAliases } from './utils/env-alias.js';
+import { checkBlockedEnvs } from './utils/blocked-envs.js';
 import { handleEnvAdd } from './patches/env-add.js';
 import { handleEnvCheck } from './commands/env-check.js';
 import { handleConfigShow } from './commands/config.js';
@@ -33,6 +33,13 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  // Check blocked environment names
+  const blockedMsg = checkBlockedEnvs(args, config);
+  if (blockedMsg) {
+    console.error(blockedMsg);
+    process.exit(1);
+  }
+
   // Built-in commands
   if (command === 'env' && args[1] === 'check') {
     const code = await handleEnvCheck(args.slice(2), config);
@@ -44,17 +51,14 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
-  // Apply environment aliases
-  const resolvedArgs = resolveAliases(args, config);
-
   // Patched commands
-  if (resolvedArgs[0] === 'env' && resolvedArgs[1] === 'add') {
-    const code = await handleEnvAdd(resolvedArgs);
+  if (args[0] === 'env' && args[1] === 'add') {
+    const code = await handleEnvAdd(args);
     process.exit(code);
   }
 
   // Default: passthrough to vercel
-  const code = await passthrough(resolvedArgs);
+  const code = await passthrough(args);
   process.exit(code);
 }
 
@@ -68,6 +72,10 @@ function printHelp(): void {
   EXTRA COMMANDS:
     env check      Audit env vars for trailing whitespace/newlines
     config [show]  Print active configuration
+
+  GUARDS:
+    disabled       Block specific commands with custom messages
+    blocked_envs   Block specific environment names in env commands
 
   CONFIG:
     .lazyvercel/lazyvercel.yaml  (project-level, takes priority)

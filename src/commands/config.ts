@@ -15,16 +15,6 @@ export function handleConfigShow(config: LazyVercelConfig): void {
     console.log(`  ${status}  ${p.path}`);
   }
 
-  console.log('\nEnvironment aliases:');
-  const envs = config.environments ?? {};
-  if (Object.keys(envs).length === 0) {
-    console.log('  (none)');
-  } else {
-    for (const [alias, target] of Object.entries(envs)) {
-      console.log(`  ${alias} → ${target}`);
-    }
-  }
-
   console.log('\nDisabled commands:');
   const disabled = config.disabled ?? {};
   if (Object.keys(disabled).length === 0) {
@@ -32,6 +22,16 @@ export function handleConfigShow(config: LazyVercelConfig): void {
   } else {
     for (const [cmd, msg] of Object.entries(disabled)) {
       console.log(`  ${cmd}: ${msg}`);
+    }
+  }
+
+  console.log('\nBlocked environments:');
+  const blockedEnvs = config.blocked_envs ?? {};
+  if (Object.keys(blockedEnvs).length === 0) {
+    console.log('  (none)');
+  } else {
+    for (const [env, msg] of Object.entries(blockedEnvs)) {
+      console.log(`  ${env}: ${msg}`);
     }
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "lazyvercel",
   "version": "0.1.0",
-  "description": "Opinionated Vercel CLI wrapper — patches env quirks, adds env auditing, environment aliases, and command guardrails",
+  "description": "Opinionated Vercel CLI wrapper — patches env quirks, adds env auditing, blocked environments, and command guardrails",
   "main": "dist/index.js",
   "bin": {
     "lazyvercel": "dist/index.js"

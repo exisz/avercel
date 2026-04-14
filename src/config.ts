@@ -4,8 +4,8 @@ import { homedir } from 'node:os';
 import yaml from 'js-yaml';
 
 export interface LazyVercelConfig {
-  environments?: Record<string, string>;
   disabled?: Record<string, string>;
+  blocked_envs?: Record<string, string>;
 }
 
 const CONFIG_DIR = '.lazyvercel';
@@ -35,13 +35,13 @@ export function loadConfig(): LazyVercelConfig {
   const projectConfig = loadYaml(projectPath);
 
   return {
-    environments: {
-      ...(globalConfig.environments ?? {}),
-      ...(projectConfig.environments ?? {}),
-    },
     disabled: {
       ...(globalConfig.disabled ?? {}),
       ...(projectConfig.disabled ?? {}),
+    },
+    blocked_envs: {
+      ...(globalConfig.blocked_envs ?? {}),
+      ...(projectConfig.blocked_envs ?? {}),
     },
   };
 }

@@ -18,7 +18,7 @@ echo "sk-abc123" | vercel env add SECRET_KEY production
 # Your app breaks. Vercel shows no error. You question your career choices.
 ```
 
-Or maybe you've accidentally run `vercel deploy` and bypassed your entire CI/CD pipeline. Or you keep typing `dev` when Vercel wants `preview`.
+Or maybe you've accidentally run `vercel deploy` and bypassed your entire CI/CD pipeline. Or your team keeps using `preview` when the project convention is `dev`.
 
 **lazyvercel** wraps the official Vercel CLI and fixes all of this.
 
@@ -26,8 +26,8 @@ Or maybe you've accidentally run `vercel deploy` and bypassed your entire CI/CD 
 
 - 🧹 **Patched `env add`** — Automatically strips trailing whitespace/newlines from piped stdin
 - 🔍 **`env check`** — Audits all your env vars for trailing whitespace (the silent killer)
-- 🏷️ **Environment aliases** — Map `dev` → `preview`, `prod` → `production` across all commands
 - 🚫 **Disabled commands** — Block dangerous commands with custom error messages
+- 🛑 **Blocked environments** — Prevent wrong environment names with guidance messages
 - 🔀 **Full passthrough** — Everything else forwards to `vercel` exactly as-is (same stdin/stdout/stderr/exit code)
 
 ## Installation
@@ -60,9 +60,9 @@ lazyvercel env check
 #    DATABASE_URL                  production, preview      trailing newline (\n)
 #    SECRET_KEY                    production               trailing whitespace
 
-# Use your aliases
-lazyvercel env pull dev     # → vercel env pull preview
-lazyvercel env pull prod    # → vercel env pull production
+# Blocked environment names show a helpful error
+lazyvercel env pull preview
+# → ❌ This project uses 'dev' not 'preview'. Use: lazyvercel env pull dev
 
 # Blocked commands show your custom message
 lazyvercel deploy
@@ -74,22 +74,42 @@ lazyvercel deploy
 Create `.lazyvercel/lazyvercel.yaml` in your project root (or `~/.lazyvercel/lazyvercel.yaml` for global config). Project config overrides global.
 
 ```yaml
-# Map friendly names to Vercel environment names
-environments:
-  dev: preview
-  staging: preview
-  prod: production
-
 # Block commands with custom messages
 disabled:
-  deploy: "❌ Do not use `vercel deploy`. Push to GitHub and let the integration handle it."
-  build: "❌ Do not use `vercel build`. Vercel builds on deploy automatically."
+  deploy: "❌ Do not use `vercel deploy`. Push to GitHub — Vercel deploys on git push."
+  build: "❌ Do not use `vercel build`. Vercel builds automatically on deploy."
+
+# Block specific environment names in env commands
+# When someone runs `lazyvercel env pull preview`, they get a loud error with guidance
+blocked_envs:
+  preview: "❌ This project uses 'dev' not 'preview'. Use: lazyvercel env pull dev"
 ```
 
 View active config:
 
 ```bash
 lazyvercel config
+```
+
+### `disabled`
+
+Block entire commands. When a user runs a disabled command, they see your custom error message and the command exits without forwarding to vercel.
+
+```yaml
+disabled:
+  deploy: "❌ Push to GitHub instead."
+  build: "❌ Vercel builds automatically."
+  "env rm": "❌ Don't remove env vars directly."
+```
+
+### `blocked_envs`
+
+Block specific environment names in `env pull`, `env add`, `env ls`, and `env rm` commands. This is **not** silent replacement — it's a loud error with guidance.
+
+```yaml
+blocked_envs:
+  preview: "❌ Use 'dev' not 'preview'. Run: lazyvercel env pull dev"
+  staging: "❌ No staging environment. Use 'production' or 'dev'."
 ```
 
 ## `env check`
@@ -118,8 +138,8 @@ Token sources (in order):
 │  1. Load config │
 │  2. Check if    │
 │     disabled    │
-│  3. Apply env   │
-│     aliases     │
+│  3. Check       │
+│     blocked_envs│
 │  4. Patch or    │
 │     passthrough │
 └────────┬────────┘
