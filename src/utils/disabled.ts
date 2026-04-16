@@ -45,21 +45,23 @@ export function isDisabled(
     return disabled[command];
   }
 
-  // Implicit deploy detection: if "deploy" is disabled, catch disguised deploy forms
-  if (disabled['deploy']) {
-    if (args.length === 0) {
-      return disabled['deploy'];
-    }
-    const first = args[0];
-    // Deploy flag as first arg (e.g. avercel --prod)
-    if (DEPLOY_FLAGS.has(first)) {
-      return disabled['deploy'];
-    }
-    // Path argument (not a flag, not a known subcommand)
-    if (!first.startsWith('-') && !VERCEL_SUBCOMMANDS.has(first)) {
-      return disabled['deploy'];
-    }
-  }
+  return null;
+}
+
+const IMPLICIT_DEPLOY_MSG = '❌ avercel does not support implicit deploy. Use `git push` to deploy via GitHub integration, or run `avercel deploy` explicitly if you really need it.';
+
+/**
+ * Check for implicit deploy forms — HARDCODED block, not config-dependent.
+ * Returns error message if implicit deploy detected, null otherwise.
+ *
+ * Catches: no args, --prod, --yes, path args (anything not a known subcommand/flag).
+ */
+export function isImplicitDeploy(args: string[]): string | null {
+  if (args.length === 0) return IMPLICIT_DEPLOY_MSG;
+
+  const first = args[0];
+  if (DEPLOY_FLAGS.has(first)) return IMPLICIT_DEPLOY_MSG;
+  if (!first.startsWith('-') && !VERCEL_SUBCOMMANDS.has(first)) return IMPLICIT_DEPLOY_MSG;
 
   return null;
 }

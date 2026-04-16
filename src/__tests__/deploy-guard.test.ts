@@ -1,50 +1,65 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { isDisabled } from '../utils/disabled.js';
+import { isDisabled, isImplicitDeploy } from '../utils/disabled.js';
 import type { AVercelConfig } from '../config.js';
 
-const MSG = '🚫 Deploy is disabled.';
+const IMPLICIT_MSG = '❌ avercel does not support implicit deploy. Use `git push` to deploy via GitHub integration, or run `avercel deploy` explicitly if you really need it.';
+const DEPLOY_MSG = '🚫 Deploy is disabled.';
 
 function cfg(disabled: Record<string, string> = {}): AVercelConfig {
   return { disabled } as AVercelConfig;
 }
 
-describe('implicit deploy detection', () => {
-  const config = cfg({ deploy: MSG });
-
-  it('empty args → deploy disabled', () => {
-    assert.strictEqual(isDisabled('', [], config), MSG);
+describe('isImplicitDeploy (hardcoded, no config)', () => {
+  it('empty args → blocked', () => {
+    assert.strictEqual(isImplicitDeploy([]), IMPLICIT_MSG);
   });
 
-  it('--prod → deploy disabled', () => {
-    assert.strictEqual(isDisabled('--prod', ['--prod'], config), MSG);
+  it('--prod → blocked', () => {
+    assert.strictEqual(isImplicitDeploy(['--prod']), IMPLICIT_MSG);
   });
 
-  it('--yes → deploy disabled', () => {
-    assert.strictEqual(isDisabled('--yes', ['--yes'], config), MSG);
+  it('--yes → blocked', () => {
+    assert.strictEqual(isImplicitDeploy(['--yes']), IMPLICIT_MSG);
   });
 
-  it('. (dot path) → deploy disabled', () => {
-    assert.strictEqual(isDisabled('.', ['.'], config), MSG);
+  it('. (dot path) → blocked', () => {
+    assert.strictEqual(isImplicitDeploy(['.']), IMPLICIT_MSG);
   });
 
-  it('./src → deploy disabled', () => {
-    assert.strictEqual(isDisabled('./src', ['./src'], config), MSG);
+  it('./src → blocked', () => {
+    assert.strictEqual(isImplicitDeploy(['./src']), IMPLICIT_MSG);
   });
 
-  it('ls → NOT deploy (known subcommand)', () => {
+  it('ls → NOT blocked (known subcommand)', () => {
+    assert.strictEqual(isImplicitDeploy(['ls']), null);
+  });
+
+  it('env pull → NOT blocked', () => {
+    assert.strictEqual(isImplicitDeploy(['env', 'pull']), null);
+  });
+
+  it('deploy → NOT implicit (explicit command)', () => {
+    assert.strictEqual(isImplicitDeploy(['deploy']), null);
+  });
+
+  it('--help → NOT blocked', () => {
+    assert.strictEqual(isImplicitDeploy(['--help']), null);
+  });
+});
+
+describe('isDisabled (config-driven)', () => {
+  const config = cfg({ deploy: DEPLOY_MSG });
+
+  it('explicit deploy → caught by config', () => {
+    assert.strictEqual(isDisabled('deploy', ['deploy'], config), DEPLOY_MSG);
+  });
+
+  it('ls with deploy disabled → null', () => {
     assert.strictEqual(isDisabled('ls', ['ls'], config), null);
   });
 
-  it('env pull → NOT deploy', () => {
-    assert.strictEqual(isDisabled('env', ['env', 'pull'], config), null);
-  });
-
-  it('empty args without deploy disabled → null', () => {
-    assert.strictEqual(isDisabled('', [], cfg({})), null);
-  });
-
-  it('explicit deploy → still caught', () => {
-    assert.strictEqual(isDisabled('deploy', ['deploy'], config), MSG);
+  it('empty disabled config → null', () => {
+    assert.strictEqual(isDisabled('deploy', ['deploy'], cfg({})), null);
   });
 });

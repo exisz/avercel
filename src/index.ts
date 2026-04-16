@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { loadConfig } from './config.js';
-import { isDisabled } from './utils/disabled.js';
+import { isDisabled, isImplicitDeploy } from './utils/disabled.js';
 import { checkBlockedEnvs } from './utils/blocked-envs.js';
 import { handleEnvAdd } from './patches/env-add.js';
 import { handleEnvCheck } from './commands/env-check.js';
@@ -15,16 +15,10 @@ async function main(): Promise<void> {
 
   const config = loadConfig();
 
-  // No args: check deploy guard first, then show help + forward
+  // No args = implicit deploy → hardcoded block
   if (args.length === 0) {
-    const disabledMsg = isDisabled('', args, config);
-    if (disabledMsg) {
-      console.error(disabledMsg);
-      process.exit(1);
-    }
-    printHelp();
-    const code = await passthrough(args);
-    process.exit(code);
+    console.error('❌ avercel does not support implicit deploy. Use `git push` to deploy via GitHub integration, or run `avercel deploy` explicitly if you really need it.');
+    process.exit(1);
   }
 
   if (args[0] === '--help' || args[0] === '-h') {
@@ -40,7 +34,14 @@ async function main(): Promise<void> {
     process.exit(code);
   }
 
-  // Check disabled commands
+  // Hardcoded: block implicit deploy (no args, --prod, path)
+  const implicitMsg = isImplicitDeploy(args);
+  if (implicitMsg) {
+    console.error(implicitMsg);
+    process.exit(1);
+  }
+
+  // Check disabled commands (config-driven)
   const disabledMsg = isDisabled(command, args, config);
   if (disabledMsg) {
     console.error(disabledMsg);
